@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t kdt1802/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true kdt1802/react-test npm test
+
+after_success:
+  - docker build -t kdt1802/multi-client ./client
+  - docker build -t kdt1802/multi-nginx ./nginx
+  - docker build -t kdt1802/multi-server ./server
+  - docker build -t kdt1802/multi-worker ./worker
+  # login docker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # push images to docker hub
+  - docker push kdt1802/multi-client
+  - docker push kdt1802/multi-nginx
+  - docker push kdt1802/multi-server
+  - docker push kdt1802/multi-worker
